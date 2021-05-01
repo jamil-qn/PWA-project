@@ -33,7 +33,10 @@
 <body>
 
 <div id="app">
-  <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+  <button id="installApp-btn" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent" style="display: none; position: absolute; top: 45%; left: 35%; z-index: 2;">
+    click me to install app to home screen
+  </button>
+  <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header main-page">
     <header class="mdl-layout__header">
       <div class="mdl-layout__header-row">
         <!-- Title -->
@@ -107,7 +110,7 @@
         <button type="button" class="mdl-snackbar__action"></button>
       </div>
     </main>
-  </div>
+  </div> 
 </div>
 <script defer src="/src/js/material.min.js"></script>
 <script src="/src/js/app.js"></script>
