@@ -12,8 +12,8 @@ if ("serviceWorker" in navigator) {
 }
 
 window.addEventListener("beforeinstallprompt", (event) => {
-  installBtn.style.display = "block";
-  mainPage.style.display = "none";
+  // installBtn.style.display = "block";
+  // mainPage.style.display = "none";
   console.log("beforinstallprompt fired");
   event.preventDefault();
   deferredPrompt = event;
