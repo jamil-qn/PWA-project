@@ -65,22 +65,23 @@ function clearCards() {
   }
 }
 
-function createCard() {
+function createCard(data) {
   var cardWrapper = document.createElement("div");
   cardWrapper.className = "shared-moment-card mdl-card mdl-shadow--2dp";
   var cardTitle = document.createElement("div");
   cardTitle.className = "mdl-card__title";
-  cardTitle.style.backgroundImage = 'url("/src/images/sf-boat.jpg")';
+  cardTitle.style.backgroundImage = `url("${data.image}")`;
   cardTitle.style.backgroundSize = "cover";
   cardTitle.style.height = "180px";
   cardWrapper.appendChild(cardTitle);
   var cardTitleTextElement = document.createElement("h2");
+  cardTitleTextElement.style.color = 'white';
   cardTitleTextElement.className = "mdl-card__title-text";
-  cardTitleTextElement.textContent = "San Francisco Trip";
+  cardTitleTextElement.textContent = data.title;
   cardTitle.appendChild(cardTitleTextElement);
   var cardSupportingText = document.createElement("div");
   cardSupportingText.className = "mdl-card__supporting-text";
-  cardSupportingText.textContent = "In San Francisco";
+  cardSupportingText.textContent = data.location;
   cardSupportingText.style.textAlign = "center";
   // var cardSaveButton = document.createElement("button");
   // cardSaveButton.textContent = "save";
@@ -90,6 +91,60 @@ function createCard() {
   componentHandler.upgradeElement(cardWrapper);
   sharedMomentsArea.appendChild(cardWrapper);
 }
+
+const updateUI = (datas) => {
+  clearCards();
+  datas.map((data) => {
+    createCard(data);
+  });
+};
+
+const url = "https://pwagram-a333e-default-rtdb.firebaseio.com/posts.json";
+var networkDataReceived = false;
+fetch(url)
+  .then(function (res) {
+    return res.json();
+  })
+  .then(function (data) {
+    networkDataReceived = true;
+    console.log("from web", data);
+    let dataArray = [];
+    for (var key in data) {
+      dataArray.push(data[key]);
+    }
+    updateUI(dataArray);
+  });
+
+if('indexedDB' in window){
+  readAllData('posts')
+  .then(data =>{
+    if(!networkDataReceived){
+      console.log("from cache", data);
+      updateUI(data);
+    }
+  });
+}
+
+// if ("caches" in window) {
+//   caches
+//     .match(url)
+//     .then((res) => {
+//       if (res) {
+//         return res.json();
+//       }
+//     })
+//     .then((data) => {
+//       console.log("from cache", data);
+//       if (!networkDataReceived) {
+//         let dataArray = [];
+//         for (var key in data) {
+//           dataArray.push(data[key]);
+//         }
+//         updateUI(dataArray);
+//       }
+//     });
+// }
+
 // fetch("https://httpbin.org/get")
 //   .then(function (res) {
 //     return res.json();
@@ -97,44 +152,3 @@ function createCard() {
 //   .then(function (data) {
 //     createCard();
 //   });
-
-
-const url = "https://httpbin.org/post";
-const networkDataReceived = false;
-fetch(url , {
-  method: 'POST',
-  headers:{
-    'Content-Type': 'application/json',
-    "Accept": "application/json",
-  },
-  body:JSON.stringify({
-    message : "some message" 
-  })
-
-})
-  .then(function (res) {
-    return res.json();
-  })
-  .then(function (data) {
-    networkDataReceived = true;
-    console.log("from web", data);
-    clearCards();
-    createCard();
-  });
-
-if ("caches" in window) {
-  caches
-    .match(url)
-    .then((res) => {
-      if (res) {
-        return res.json();
-      }
-    })
-    .then((data) => {
-      console.log("from cache", data);
-      if (!networkDataReceived) {
-        clearCards();
-        createCard();
-      }
-    });
-}
