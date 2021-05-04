@@ -1,8 +1,8 @@
 importScripts("/src/js/idb.js");
 importScripts("/src/js/utility.js");
 
-const CACHE_STATIC_NAME = "static-v4";
-const CACHE_DYNAMIC_NAME = "dynamic-v3";
+const CACHE_STATIC_NAME = "static-v10";
+const CACHE_DYNAMIC_NAME = "dynamic-v1";
 const STATIC_FILES = [
   "/",
   "/index.html",
@@ -16,7 +16,10 @@ const STATIC_FILES = [
   "/src/css/app.css",
   "/src/css/feed.css",
   "/src/images/main-image.jpg",
+  "/src/images/main-image-lg.jpg",
+  "/src/images/main-image-sm.jpg",
   "/favicon.ico",
+  "/manifest.json",
   "https://fonts.googleapis.com/css?family=Roboto:400,700",
   "https://fonts.googleapis.com/icon?family=Material+Icons",
   "https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.indigo-pink.min.css",

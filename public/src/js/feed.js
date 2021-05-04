@@ -6,8 +6,11 @@ var closeCreatePostModalButton = document.querySelector(
 var sharedMomentsArea = document.querySelector("#shared-moments");
 
 function openCreatePostModal() {
-  createPostArea.style.display = "block";
-
+  // createPostArea.style.display = "block";
+  // setTimeout(()=>{
+  createPostArea.style.transform = "translateY(0)";
+  // },1);
+  
   // //getting rid of a servie worker
   // if('serviceWorker' in navigator){
   //   navigator.serviceWorker.getRegistrations()
@@ -19,28 +22,27 @@ function openCreatePostModal() {
   // }
 }
 
-// var installBtn = document.querySelector("#installApp-btn");
-// var mainPage = document.querySelector(".main-page");
-// installBtn.addEventListener("click", () => {
-//   if (deferredPrompt) {
-//     deferredPrompt.prompt();
-//     deferredPrompt.userChoice.then((choiceResuilt) => {
-//       console.log("User choice: ", choiceResuilt.outcome);
-//       if (choiceResuilt.outcome === "dismissed") {
-//         console.log("User Cancelled installition");
-//       } else {
-//         console.log("User added app to home screen");
-//         installBtn.style.display = "none";
-//         mainPage.style.display = "block";
-//       }
+var installBtn = document.querySelector("#installApp-btn");
+installBtn.addEventListener("click", () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choiceResuilt) => {
+      console.log("User choice: ", choiceResuilt.outcome);
+      if (choiceResuilt.outcome === "dismissed") {
+        console.log("User Cancelled installition");
+      } else {
+        console.log("User added app to home screen");
+        document.querySelector('#install-app').getElementsByClassName.transform = 'translateY(100vh)';
+      }
 
-//       deferredPrompt = null;
-//     });
-//   }
-// });
+      deferredPrompt = null;
+    });
+  }
+});
 
 function closeCreatePostModal() {
-  createPostArea.style.display = "none";
+  createPostArea.style.transform = "translateY(100vh)";
+  //createPostArea.style.display = "none";
 }
 
 shareImageButton.addEventListener("click", openCreatePostModal);
@@ -72,7 +74,6 @@ function createCard(data) {
   cardTitle.className = "mdl-card__title";
   cardTitle.style.backgroundImage = `url("${data.image}")`;
   cardTitle.style.backgroundSize = "cover";
-  cardTitle.style.height = "180px";
   cardWrapper.appendChild(cardTitle);
   var cardTitleTextElement = document.createElement("h2");
   cardTitleTextElement.style.color = 'white';
