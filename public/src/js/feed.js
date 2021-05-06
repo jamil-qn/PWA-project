@@ -136,7 +136,7 @@ const sendData = () => {
       'Accept' : 'application/json'
     },
     body: JSON.stringify({
-      id: new Data().toISOString(),
+      id: new Date().toISOString(),
       title: titleInput.value,
       location: locationInput.value,
       image:

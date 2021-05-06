@@ -1,18 +1,21 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const cors = require("cors")({ origin: true });
+const webpush = require("web-push");
 
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
 //
 
+// const serviceAcount = require("./pwapram-tb-key.json");
 // admin.initializeApp({
+// credential: admin.credential.cert(),
 //   databaseURL: 'https://pwagram-a333e-default-rtdb.firebaseio.com/',
 
 // })
 
 exports.storePostData = functions.https.onRequest((request, response) => {
-  cors(request, response,() => {
+  cors(request, response, () => {
     admin
       .database()
       .ref("posts")
@@ -23,12 +26,44 @@ exports.storePostData = functions.https.onRequest((request, response) => {
         image: request.body.image,
       })
       .then(() => {
-        response
-          .status(201)
-          .json({ message: "Data stored", id: request.body.id });
-      })
-      .catch((err) => {
-        response.status(500).json({ error: err });
+        webpush.setVapidDetails(
+          "mailto: jamil.qolinezhad@gmail.com",
+          "BAD8YSlHy6yCmh-wkbS39ojK1eoro8RtuYnXz0TIAbrNFU_LJGHfZgYjoy5HK9tX02Jte5pMw27LCDfypZdr36A",
+          "a4byyZ-cq0ofc4HpFmHzwCJIKMet3BJGs850KpW9r0w"
+        );
+        return admin
+          .database()
+          .ref("subscriptions")
+          .once("value")
+          .then((subscriptions) => {
+            subscriptions.forEach((sub) => {
+              var pushConfig = {
+                endpoint: sub.val().endpoint,
+                keys: {
+                  auth: sub.val().keys.auth,
+                  p256dh: sub.val().keys.p256dh,
+                },
+              };
+              webpush
+                .sendNotification(
+                  pushConfig,
+                  JSON.stringify({
+                    title: "New Post",
+                    content: "New Post added!",
+                    openUrl: '/help'
+                  })
+                )
+                .catch((err) => {
+                  console.log(err);
+                });
+            });
+            response
+              .status(201)
+              .json({ message: "Data stored", id: request.body.id });
+          })
+          .catch((err) => {
+            response.status(500).json({ error: err });
+          });
       });
   });
 });
