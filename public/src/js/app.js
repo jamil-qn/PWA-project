@@ -12,7 +12,7 @@ if ("serviceWorker" in navigator) {
 }
 
 window.addEventListener("beforeinstallprompt", (event) => {
-  document.querySelector('#install-app').style.transform = "translateY(0)";
+  // document.querySelector('#install-app').style.transform = "translateY(0)";
   console.log("beforinstallprompt fired");
   event.preventDefault();
   deferredPrompt = event;

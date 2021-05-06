@@ -4,13 +4,16 @@ var closeCreatePostModalButton = document.querySelector(
   "#close-create-post-modal-btn"
 );
 var sharedMomentsArea = document.querySelector("#shared-moments");
+var form = document.querySelector("form");
+var titleInput = document.querySelector("#title");
+var locationInput = document.querySelector("#location");
 
 function openCreatePostModal() {
   // createPostArea.style.display = "block";
   // setTimeout(()=>{
   createPostArea.style.transform = "translateY(0)";
   // },1);
-  
+
   // //getting rid of a servie worker
   // if('serviceWorker' in navigator){
   //   navigator.serviceWorker.getRegistrations()
@@ -22,23 +25,23 @@ function openCreatePostModal() {
   // }
 }
 
-var installBtn = document.querySelector("#installApp-btn");
-installBtn.addEventListener("click", () => {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then((choiceResuilt) => {
-      console.log("User choice: ", choiceResuilt.outcome);
-      if (choiceResuilt.outcome === "dismissed") {
-        console.log("User Cancelled installition");
-      } else {
-        console.log("User added app to home screen");
-        document.querySelector('#install-app').getElementsByClassName.transform = 'translateY(100vh)';
-      }
+// var installBtn = document.querySelector("#installApp-btn");
+// installBtn.addEventListener("click", () => {
+//   if (deferredPrompt) {
+//     deferredPrompt.prompt();
+//     deferredPrompt.userChoice.then((choiceResuilt) => {
+//       console.log("User choice: ", choiceResuilt.outcome);
+//       if (choiceResuilt.outcome === "dismissed") {
+//         console.log("User Cancelled installition");
+//       } else {
+//         console.log("User added app to home screen");
+//         document.querySelector('#install-app').getElementsByClassName.transform = 'translateY(100vh)';
+//       }
 
-      deferredPrompt = null;
-    });
-  }
-});
+//       deferredPrompt = null;
+//     });
+//   }
+// });
 
 function closeCreatePostModal() {
   createPostArea.style.transform = "translateY(100vh)";
@@ -76,7 +79,7 @@ function createCard(data) {
   cardTitle.style.backgroundSize = "cover";
   cardWrapper.appendChild(cardTitle);
   var cardTitleTextElement = document.createElement("h2");
-  cardTitleTextElement.style.color = 'white';
+  cardTitleTextElement.style.color = "white";
   cardTitleTextElement.className = "mdl-card__title-text";
   cardTitleTextElement.textContent = data.title;
   cardTitle.appendChild(cardTitleTextElement);
@@ -116,15 +119,69 @@ fetch(url)
     updateUI(dataArray);
   });
 
-if('indexedDB' in window){
-  readAllData('posts')
-  .then(data =>{
-    if(!networkDataReceived){
+if ("indexedDB" in window) {
+  readAllData("posts").then((data) => {
+    if (!networkDataReceived) {
       console.log("from cache", data);
       updateUI(data);
     }
   });
 }
+
+const sendData = () => {
+  fetch("https://pwagram-a333e-default-rtdb.firebaseio.com/posts.json", {
+    method: "POST",
+    headers:{
+      'Content-Type':'application/json',
+      'Accept' : 'application/json'
+    },
+    body: JSON.stringify({
+      id: new Data().toISOString(),
+      title: titleInput.value,
+      location: locationInput.value,
+      image:
+        "https://firebasestorage.googleapis.com/v0/b/pwagram-a333e.appspot.com/o/sf-boat.jpg?alt=media&token=b8dcb864-1060-4721-b031-6fc109e09390",
+    }),
+  })
+  .then(res =>{
+    console.log('Sent data', res);
+    updateUI();
+  })
+};
+
+form.addEventListener("submit", (event) => {
+  event.preventDefault();
+  if (titleInput.value.trim() === "" || locationInput.value.trim() === "") {
+    alert("Please enter valid data!");
+    return;
+  }
+  closeCreatePostModal();
+
+  if ("serviceWorker" in navigator && "SyncManager" in window) {
+    navigator.serviceWorker.ready.then((sw) => {
+      var post = {
+        id: new Date().toISOString(),
+        title: titleInput.value,
+        location: locationInput.value,
+      };
+      writeData("sync-posts", post)
+        .then(() => {
+          return sw.sync.register("sync-new-posts");
+        })
+        .then(() => {
+          //these code for snackbar feature and show sync message to client
+          var snackbarContainer = document.querySelector("#confirmation-toast");
+          var data = { message: "Your Post was saved for syncing! " };
+          snackbarContainer.MaterialSnackbar.showSnackbar(data);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    });
+  } else {
+    sendData();
+  }
+});
 
 // if ("caches" in window) {
 //   caches
