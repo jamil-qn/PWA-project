@@ -7,11 +7,117 @@ var sharedMomentsArea = document.querySelector("#shared-moments");
 var form = document.querySelector("form");
 var titleInput = document.querySelector("#title");
 var locationInput = document.querySelector("#location");
+var videoPlayer = document.querySelector("#player");
+var canvasElement = document.querySelector("#canvas");
+var captureButton = document.querySelector("#capture-btn");
+var imagePicker = document.querySelector("#image-picker");
+var imagePickerArea = document.querySelector("#pick-image");
+var picture;
+var locationBtn = document.querySelector("#location-btn");
+var locationLoader = document.querySelector("#location-loader");
+var fetchLocation = { lat: 0, lng: 0 };
+
+locationBtn.addEventListener("click", (event) => {
+  if (!("geolocation" in navigator)) {
+    return;
+  }
+
+  var sawAlert = false;
+
+  locationBtn.style.display = "none";
+  locationLoader.style.display = "block";
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      locationBtn.style.display = "inline";
+      locationLoader.style.display = "none";
+      fetchLocation = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+      };
+      locationInput.value = "In Munich";
+      document.querySelector("#manual-location").classList.add("is-focused");
+    },
+    (err) => {
+      console.log(err);
+      locationBtn.style.display = "inline";
+      locationLoader.style.display = "none";
+      if (!sawAlert) {
+        sawAlert = true;
+        alert("Couldn't fetch location, Please enter manually!");
+      }
+      fetchLocation = { lat: 0, lng: 0 };
+    },
+    { timeout: 7000 }
+  );
+});
+
+const initializeLocation = () => {
+  if (!("geolocation" in navigator)) {
+    locationBtn.style.display = "none";
+  }
+};
+
+const initializeMedia = () => {
+  if (!("mediaDevices" in navigator)) {
+    navigator.mediaDevices = {};
+  }
+
+  if (!("getUserMedia" in navigator.mediaDevices)) {
+    navigator.mediaDevices.getUserMedia = (constraints) => {
+      var getUserMedia =
+        navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+      if (!getUserMedia) {
+        return Promise.reject(new Error("getUserMedia is not implemented"));
+      }
+      return new Promise((resolve, reject) => {
+        getUserMedia.call(navigator, constraints, resolve, reject);
+      });
+    };
+  }
+
+  navigator.mediaDevices
+    .getUserMedia({ video: true })
+    .then((stream) => {
+      videoPlayer.srcObject = stream;
+      videoPlayer.style.display = "block";
+    })
+    .catch((err) => {
+      imagePickerArea.style.display = "block";
+    });
+};
+
+captureButton.addEventListener("click", (event) => {
+  canvasElement.style.display = "block";
+  videoPlayer.style.display = "none";
+  captureButton.style.display = "none";
+  var context = canvasElement.getContext("2d");
+  context.drawImage(
+    videoPlayer,
+    0,
+    0,
+    canvas.width,
+    videoPlayer.videoHeight / (videoPlayer.videoWidth / canvas.width)
+  );
+  videoPlayer.srcObject.getVideoTracks().forEach((track) => {
+    track.stop();
+  });
+  picture = dataURItoBlob(canvasElement.toDataURL());
+});
+
+imagePicker.addEventListener("change", (event) => {
+  picture = event.target.files[0];
+});
 
 function openCreatePostModal() {
   // createPostArea.style.display = "block";
   // setTimeout(()=>{
-  createPostArea.style.transform = "translateY(0)";
+  setTimeout(() => {
+    createPostArea.style.transform = "translateY(0)";
+  }, 1);
+  initializeMedia();
+  initializeLocation();
   // },1);
 
   // //getting rid of a servie worker
@@ -19,7 +125,7 @@ function openCreatePostModal() {
   //   navigator.serviceWorker.getRegistrations()
   //   .then(registeration =>{
   //     for(let i =0 ; i<registeration.length; i++){
-  //       registeration[0].unregister();
+  //       registeration[1].unregister();
   //     }
   //   })
   // }
@@ -44,7 +150,20 @@ function openCreatePostModal() {
 // });
 
 function closeCreatePostModal() {
-  createPostArea.style.transform = "translateY(100vh)";
+  imagePickerArea.style.display = "none";
+  videoPlayer.style.display = "none";
+  canvasElement.style.display = "none";
+  if (videoPlayer.srcObject) {
+    videoPlayer.srcObject.getVideoTracks().forEach((track) => {
+      track.stop();
+    });
+  }
+  setTimeout(() => {
+    createPostArea.style.transform = "translateY(100vh)";
+  }, 1);
+  captureButton.style.display = "block";
+  locationBtn.style.display = "inline";
+  locationLoader.style.display = "none";
   //createPostArea.style.display = "none";
 }
 
@@ -129,24 +248,21 @@ if ("indexedDB" in window) {
 }
 
 const sendData = () => {
+  var id = new Date().toISOString();
+  var postData = new FormData();
+  postData.append("id", id);
+  postData.append("title", titleInput.value);
+  postData.append("location", locationInput.value);
+  postData.append("rawLocationLat", fetchLocation.lat);
+  postData.append("rawLocationLng", fetchLocation.lng);
+  postData.append("file", picture, id + ".png");
   fetch("https://pwagram-a333e-default-rtdb.firebaseio.com/posts.json", {
     method: "POST",
-    headers:{
-      'Content-Type':'application/json',
-      'Accept' : 'application/json'
-    },
-    body: JSON.stringify({
-      id: new Date().toISOString(),
-      title: titleInput.value,
-      location: locationInput.value,
-      image:
-        "https://firebasestorage.googleapis.com/v0/b/pwagram-a333e.appspot.com/o/sf-boat.jpg?alt=media&token=b8dcb864-1060-4721-b031-6fc109e09390",
-    }),
-  })
-  .then(res =>{
-    console.log('Sent data', res);
+    body: postData,
+  }).then((res) => {
+    console.log("Sent data", res);
     updateUI();
-  })
+  });
 };
 
 form.addEventListener("submit", (event) => {
@@ -163,6 +279,8 @@ form.addEventListener("submit", (event) => {
         id: new Date().toISOString(),
         title: titleInput.value,
         location: locationInput.value,
+        picture: picture,
+        rawLocation: fetchLocation,
       };
       writeData("sync-posts", post)
         .then(() => {

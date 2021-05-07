@@ -1,8 +1,8 @@
 importScripts("/src/js/idb.js");
 importScripts("/src/js/utility.js");
 
-const CACHE_STATIC_NAME = "static-v2";
-const CACHE_DYNAMIC_NAME = "dynamic-v1";
+const CACHE_STATIC_NAME = "static-v12";
+const CACHE_DYNAMIC_NAME = "dynamic-v2";
 const STATIC_FILES = [
   "/",
   "/index.html",
@@ -12,6 +12,7 @@ const STATIC_FILES = [
   "/src/js/idb.js",
   "/src/js/promise.js",
   "/src/js/fetch.js",
+  "/src/js/utility.js",
   "/src/js/material.min.js",
   "/src/css/app.css",
   "/src/css/feed.css",
@@ -183,21 +184,18 @@ self.addEventListener("sync", (event) => {
     event.waitUntil(
       readAllData("sync-posts").then((data) => {
         for (let dt of data) {
+          var postData = new FormData();
+          postData.append("id", dt.id);
+          postData.append("title", dt.title);
+          postData.append("location", dt.location);
+          postData.append("rawLocationLat", dt.rawLocation.lat);
+          postData.append("rawLocationLng", dt.rawLocation.lng);
+          postData.append("file", dt.picture, dt.id + ".png");
           fetch(
             "https://pwagram-a333e-default-rtdb.firebaseio.com/posts.json",
             {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
-              body: JSON.stringify({
-                id: dt.id,
-                title: dt.title,
-                location: dt.location,
-                image:
-                  "https://firebasestorage.googleapis.com/v0/b/pwagram-a333e.appspot.com/o/sf-boat.jpg?alt=media&token=b8dcb864-1060-4721-b031-6fc109e09390",
-              }),
+              body: postData,
             }
           )
             .then((res) => {
@@ -249,7 +247,7 @@ self.addEventListener("notificationclose", (event) => {
 
 self.addEventListener("push", (event) => {
   console.log("Push Notification received", event);
-  var data = { title: "new", content: "Something new happend!", openUrl: '/' };
+  var data = { title: "new", content: "Something new happend!", openUrl: "/" };
   if (event.data) {
     data = JSON.parse(event.data.text());
   }
@@ -259,8 +257,8 @@ self.addEventListener("push", (event) => {
     icon: "/src/images/icons/app-icon-96x96.png",
     badge: "/src/images/icons/app-icon-96x96.png",
     data: {
-      url: data.openUrl
-    }
+      url: data.openUrl,
+    },
   };
 
   event.waitUntil(self.registration.showNotification(data.title, options));
